@@ -27,3 +27,10 @@ class Settings(BaseSettings):
     storage_path: str = Field(default="./storage", alias="STORAGE_PATH")
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+
+settings = Settings()
