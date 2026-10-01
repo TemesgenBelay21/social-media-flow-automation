@@ -24,3 +24,59 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-mysql+pymysql://socialflow:change-me@mysql:3306/socialflow}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      SOCIAL_PLATFORM_MODE: ${SOCIAL_PLATFORM_MODE:-mock}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.tasks.celery_app worker --loglevel=info
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-mysql+pymysql://socialflow:change-me@mysql:3306/socialflow}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      SOCIAL_PLATFORM_MODE: ${SOCIAL_PLATFORM_MODE:-mock}
+    depends_on:
+      - backend
+      - redis
+      - mysql
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  mysql_data:
