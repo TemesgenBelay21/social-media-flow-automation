@@ -39,3 +39,109 @@ class UserOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class SocialAccountCreate(BaseModel):
+    platform: str
+    account_name: Optional[str] = None
+    username: Optional[str] = None
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class SocialAccountOut(BaseModel):
+    id: int
+    user_id: int
+    platform: str
+    platform_user_id: Optional[str]
+    account_name: Optional[str]
+    username: Optional[str]
+    connection_status: str
+    metadata: Optional[Dict[str, Any]] = Field(default=None, alias="metadata_")
+    created_at: datetime
+
+    @field_validator("metadata", mode="before")
+    @classmethod
+    def parse_metadata(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            try:
+                return json.loads(value)
+            except (TypeError, ValueError):
+                return {"raw": value}
+        return value
+
+    model_config = {"from_attributes": True, "populate_by_name": True}
+
+
+class ContentCreate(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
+    base_caption: Optional[str] = None
+    status: str = "draft"
+
+
+class ContentOut(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    base_caption: Optional[str]
+    status: str
+    created_at: datetime
+    updated_at: Optional[datetime]
+
+    model_config = {"from_attributes": True}
+
+
+class MediaCreate(BaseModel):
+    file_name: str
+    file_type: str
+    mime_type: str
+    file_size: int
+    storage_path: str
+    url: Optional[str] = None
+    width: Optional[int] = None
+    height: Optional[int] = None
+    duration: Optional[float] = None
+
+
+class MediaOut(BaseModel):
+    id: int
+    user_id: int
+    file_name: str
+    file_type: str
+    mime_type: str
+    file_size: int
+    storage_path: str
+    url: Optional[str]
+    width: Optional[int]
+    height: Optional[int]
+    duration: Optional[float]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PlatformPostCreate(BaseModel):
+    content_id: Optional[int] = None
+    social_account_id: int
+    platform: str
+    caption: Optional[str] = None
+    platform_config: Optional[Dict[str, Any]] = None
+    scheduled_at: Optional[datetime] = None
+    status: str = "draft"
+
+
+class PlatformPostOut(BaseModel):
+    id: int
+    content_id: int
+    social_account_id: int
+    platform: str
+    caption: Optional[str]
+    platform_config: Optional[Dict[str, Any]]
+    scheduled_at: Optional[datetime]
+    published_at: Optional[datetime]
+    external_post_id: Optional[str]
+    status: str
+    error_message: Optional[str]
+    retry_count: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
