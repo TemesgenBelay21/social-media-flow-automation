@@ -130,3 +130,101 @@ class ContentMedia(Base):
 
     __table_args__ = (UniqueConstraint(
         "content_id", "media_id", name="uq_content_media"),)
+
+
+class PlatformPost(Base):
+    __tablename__ = "platform_posts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content_id = Column(Integer, ForeignKey(
+        "content.id", ondelete="CASCADE"), nullable=False)
+    social_account_id = Column(Integer, ForeignKey(
+        "social_accounts.id", ondelete="CASCADE"), nullable=False)
+    platform = Column(String(50), nullable=False, index=True)
+    caption = Column(Text, nullable=True)
+    platform_config = Column(Text, nullable=True)
+    scheduled_at = Column(DateTime, nullable=True, index=True)
+    published_at = Column(DateTime, nullable=True)
+    external_post_id = Column(String(255), nullable=True, index=True)
+    status = Column(String(50), default="draft", index=True)
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+
+    content = relationship("Content", back_populates="platform_posts")
+    social_account = relationship(
+        "SocialAccount", back_populates="platform_posts")
+    scheduled_jobs = relationship(
+        "ScheduledJob", back_populates="platform_post", cascade="all, delete-orphan")
+
+
+class ScheduledJob(Base):
+    __tablename__ = "scheduled_jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    platform_post_id = Column(Integer, ForeignKey(
+        "platform_posts.id", ondelete="CASCADE"), nullable=False)
+    job_id = Column(String(255), nullable=True)
+    scheduled_at = Column(DateTime, nullable=True, index=True)
+    started_at = Column(DateTime, nullable=True)
+    completed_at = Column(DateTime, nullable=True)
+    status = Column(String(50), default="queued", index=True)
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    platform_post = relationship(
+        "PlatformPost", back_populates="scheduled_jobs")
+
+
+class Analytics(Base):
+    __tablename__ = "analytics"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    platform = Column(String(50), nullable=False, index=True)
+    external_post_id = Column(String(255), nullable=True, index=True)
+    impressions = Column(Integer, nullable=True)
+    reach = Column(Integer, nullable=True)
+    views = Column(Integer, nullable=True)
+    likes = Column(Integer, nullable=True)
+    comments = Column(Integer, nullable=True)
+    shares = Column(Integer, nullable=True)
+    saves = Column(Integer, nullable=True)
+    clicks = Column(Integer, nullable=True)
+    engagement = Column(Float, nullable=True)
+    follower_count = Column(Integer, nullable=True)
+    captured_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    type = Column(String(50), default="info")
+    title = Column(String(200), nullable=False)
+    message = Column(Text, nullable=False)
+    read_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="notifications")
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="SET NULL"), nullable=True)
+    action = Column(String(120), nullable=False, index=True)
+    entity_type = Column(String(120), nullable=True)
+    entity_id = Column(Integer, nullable=True)
+    details = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+    user = relationship("User", back_populates="audit_logs")
