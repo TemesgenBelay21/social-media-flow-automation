@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+.npm/
+
+# TypeScript build output
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# DB
+*.sqlite3
+*.db
+
+# Tests
+.pytest_cache/
+
+# Runtime storage
+storage/
