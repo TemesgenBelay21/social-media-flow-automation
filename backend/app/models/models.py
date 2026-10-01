@@ -47,3 +47,86 @@ class RefreshToken(Base):
     revoked_at = Column(DateTime, nullable=True)
 
     user = relationship("User", back_populates="refresh_tokens")
+
+
+class SocialAccount(Base):
+    __tablename__ = "social_accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    platform = Column(String(50), nullable=False, index=True)
+    platform_user_id = Column(String(120), nullable=True)
+    account_name = Column(String(150), nullable=True)
+    username = Column(String(150), nullable=True)
+    access_token_encrypted = Column(Text, nullable=True)
+    refresh_token_encrypted = Column(Text, nullable=True)
+    token_expires_at = Column(DateTime, nullable=True)
+    scopes = Column(Text, nullable=True)
+    connection_status = Column(String(50), default="connected")
+    metadata_ = Column("metadata", Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+
+    user = relationship("User", back_populates="social_accounts")
+    platform_posts = relationship(
+        "PlatformPost", back_populates="social_account", cascade="all, delete-orphan")
+
+
+class Content(Base):
+    __tablename__ = "content"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(200), nullable=False)
+    base_caption = Column(Text, nullable=True)
+    status = Column(String(50), default="draft", index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+
+    user = relationship("User", back_populates="content")
+    media_links = relationship(
+        "ContentMedia", back_populates="content", cascade="all, delete-orphan")
+    platform_posts = relationship(
+        "PlatformPost", back_populates="content", cascade="all, delete-orphan")
+
+
+class Media(Base):
+    __tablename__ = "media"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)
+    file_name = Column(String(255), nullable=False)
+    file_type = Column(String(50), nullable=False)
+    mime_type = Column(String(120), nullable=False)
+    file_size = Column(Integer, nullable=False)
+    storage_path = Column(String(500), nullable=False)
+    url = Column(String(500), nullable=True)
+    width = Column(Integer, nullable=True)
+    height = Column(Integer, nullable=True)
+    duration = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    content_links = relationship(
+        "ContentMedia", back_populates="media", cascade="all, delete-orphan")
+
+
+class ContentMedia(Base):
+    __tablename__ = "content_media"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content_id = Column(Integer, ForeignKey(
+        "content.id", ondelete="CASCADE"), nullable=False)
+    media_id = Column(Integer, ForeignKey(
+        "media.id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    content = relationship("Content", back_populates="media_links")
+    media = relationship("Media", back_populates="content_links")
+
+    __table_args__ = (UniqueConstraint(
+        "content_id", "media_id", name="uq_content_media"),)
