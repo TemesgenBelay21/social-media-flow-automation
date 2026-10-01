@@ -39,3 +39,80 @@ SocialFlow Automation is a full-stack social media management and automation pla
 ## Architecture
 
 The system includes a React frontend, a FastAPI backend, a MySQL database, and a Redis/Celery worker system for scheduled publishing. Platform-specific logic is isolated behind adapter/service patterns so each social platform can be extended independently.
+
+## Requirements
+
+- Docker and Docker Compose
+- Python 3.12+
+- Node.js 20+
+- MySQL 8+
+- Redis
+
+## Installation
+
+From the project root:
+
+1. Copy the example environment file:
+   `cp .env.example .env`
+2. Update credentials and secret values in `.env`.
+3. Start the stack:
+   `docker compose up --build`
+
+## Environment variables
+
+The application reads configuration from `.env` at the project root. See `.env.example` for the required variables. Do not commit real secrets to the repository.
+
+## Database setup
+
+Run migrations from the backend directory:
+
+```bash
+cd backend
+alembic upgrade head
+```
+
+To create a new migration:
+
+```bash
+cd backend
+alembic revision --autogenerate -m "describe change"
+```
+
+## Running the application
+
+Backend development server:
+
+```bash
+cd backend
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Frontend development server:
+
+```bash
+cd frontend
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173
+```
+
+Celery worker:
+
+```bash
+cd backend
+celery -A app.tasks.celery_app worker --loglevel=info
+```
+
+## API documentation
+
+The backend exposes Swagger UI and Redoc automatically:
+
+- http://localhost:8000/api/docs
+- http://localhost:8000/api/redoc
+
+## Social API configuration
+
+Each platform requires its own developer application and credentials. The app is designed around the official platform APIs, with mock mode used for local development when credentials or approval are not available.
+
+## Mock mode
+
+Set `SOCIAL_PLATFORM_MODE=mock` in the environment file to simulate account connections, publishing, and analytics without hitting live APIs. The mock implementations are clearly marked as development data and are not intended for production use.
