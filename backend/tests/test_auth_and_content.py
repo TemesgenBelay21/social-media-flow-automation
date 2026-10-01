@@ -45,3 +45,31 @@ def create_user_and_login(email: str = "alice@example.com", password: str = "sec
     token = login.json()["access_token"]
     assert token
     return token
+
+
+def test_register_and_login_flow():
+    token = create_user_and_login()
+
+    me = client.get(
+        "/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 200, me.text
+    assert me.json()["email"] == "alice@example.com"
+
+
+def test_create_and_list_content():
+    token = create_user_and_login()
+
+    create = client.post(
+        "/api/content",
+        json={"title": "Launch post",
+              "base_caption": "Hello world", "status": "draft"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert create.status_code == 200, create.text
+    payload = create.json()
+    assert payload["title"] == "Launch post"
+
+    listing = client.get(
+        "/api/content", headers={"Authorization": f"Bearer {token}"})
+    assert listing.status_code == 200, listing.text
+    assert len(listing.json()) >= 1
