@@ -116,3 +116,36 @@ Each platform requires its own developer application and credentials. The app is
 ## Mock mode
 
 Set `SOCIAL_PLATFORM_MODE=mock` in the environment file to simulate account connections, publishing, and analytics without hitting live APIs. The mock implementations are clearly marked as development data and are not intended for production use.
+
+## Testing
+
+Backend tests:
+
+```bash
+cd backend
+pytest
+```
+
+Frontend build verification:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+## Security
+
+- Never commit `.env` files or secrets.
+- Store passwords only as hashes.
+- Use JWT access and refresh tokens.
+- Validate input and file uploads.
+- Keep platform credentials encrypted at rest when stored.
+
+## Deployment
+
+This project is designed for containerized deployment in Docker environments or a managed hosting stack with MySQL, Redis, and a Python application server. Real platform integrations require their own approved developer apps and the appropriate OAuth or bot configuration.
+
+## Notes on unsupported platform capabilities
+
+Some official APIs do not support all social-media actions through a single mechanism. The app is structured to surface those limitations and expose mock or status-based behavior clearly rather than bypassing platform restrictions.
