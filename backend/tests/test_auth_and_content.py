@@ -73,3 +73,72 @@ def test_create_and_list_content():
         "/api/content", headers={"Authorization": f"Bearer {token}"})
     assert listing.status_code == 200, listing.text
     assert len(listing.json()) >= 1
+
+
+def test_schedule_creates_scheduled_job():
+    token = create_user_and_login()
+    content = client.post(
+        "/api/content",
+        json={"title": "Queued post", "base_caption": "Soon", "status": "draft"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    content_id = content.json()["id"]
+
+    account = client.post(
+        "/api/social-accounts",
+        json={"platform": "instagram",
+              "account_name": "Demo IG", "username": "demo_ig"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert account.status_code == 200, account.text
+
+    schedule = client.post(
+        f"/api/content/{content_id}/schedule",
+        json={"social_account_id": account.json(
+        )["id"], "platform": "instagram", "caption": "Queued caption"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert schedule.status_code == 200, schedule.text
+    assert schedule.json()["success"] is True
+
+    db = SessionLocal()
+    job = db.query(ScheduledJob).first()
+    assert job is not None
+    assert job.status == "queued"
+    db.close()
+
+
+def test_schedule_and_publish_mock_content():
+    token = create_user_and_login()
+
+    content = client.post(
+        "/api/content",
+        json={"title": "Mock campaign",
+              "base_caption": "Hello mock world", "status": "draft"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    content_id = content.json()["id"]
+
+    account = client.post(
+        "/api/social-accounts",
+        json={"platform": "instagram",
+              "account_name": "Demo IG", "username": "demo_ig"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert account.status_code == 200, account.text
+    account_id = account.json()["id"]
+
+    schedule = client.post(
+        f"/api/content/{content_id}/schedule",
+        json={"social_account_id": account_id,
+              "platform": "instagram", "caption": "Scheduled caption"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert schedule.status_code == 200, schedule.text
+
+    publish = client.post(
+        f"/api/content/{content_id}/publish",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert publish.status_code == 200, publish.text
+    assert publish.json()["success"] is True
