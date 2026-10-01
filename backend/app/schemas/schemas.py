@@ -145,3 +145,46 @@ class PlatformPostOut(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class NotificationOut(BaseModel):
+    id: int
+    user_id: int
+    type: str
+    title: str
+    message: str
+    read_at: Optional[datetime]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AnalyticsOut(BaseModel):
+    id: int
+    user_id: int
+    platform: str
+    external_post_id: Optional[str]
+    impressions: Optional[int]
+    reach: Optional[int]
+    views: Optional[int]
+    likes: Optional[int]
+    comments: Optional[int]
+    shares: Optional[int]
+    saves: Optional[int]
+    clicks: Optional[int]
+    engagement: Optional[float]
+    follower_count: Optional[int]
+    captured_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class SettingsUpdate(BaseModel):
+    timezone: Optional[str] = None
+    notification_preferences: Optional[Dict[str, bool]] = None
+
+
+class SettingsOut(BaseModel):
+    timezone: str = "UTC"
+    notification_preferences: Dict[str, bool] = {
+        "email": True, "push": True, "sms": False}
